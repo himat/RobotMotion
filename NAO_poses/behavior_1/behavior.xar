@@ -47,6 +47,7 @@ class MyClass(GeneratedClass):
 
 
         self.folderName = None
+        self.stop = False
 
         #import movecontrol
 
@@ -59,7 +60,7 @@ class MyClass(GeneratedClass):
     def onUnload(self):
         #put clean-up code here
         print "FINISHED"
-        pass
+        self.stop = True
 
 
 
@@ -89,17 +90,18 @@ class MyClass(GeneratedClass):
 
         data = []
         movecontrol.print_test()
-        data += movecontrol.headSide(self, "left")
-        data += movecontrol.headDown(self)
 
-        data += movecontrol.armUp(self, "left")
-        data += movecontrol.armOut(self, "left")
+#        data += movecontrol.headSide(self, "left")
+#        data += movecontrol.headDown(self)
 
-        data += movecontrol.handClose(self, "left")
-        data += movecontrol.handOpen(self, "left")
+#        data += movecontrol.armUp(self, "left")
+#        data += movecontrol.armOut(self, "left")
 
-        data += movecontrol.legForward(self, "left")
-        data += movecontrol.leanSide(self, "left")
+#        data += movecontrol.handClose(self, "left")
+#        data += movecontrol.handOpen(self, "left")
+
+#        data += movecontrol.legForward(self, "left")
+#        data += movecontrol.leanSide(self, "left")
 
         #data += movecontrol.leanSide(self, "right")
 
@@ -114,7 +116,7 @@ class MyClass(GeneratedClass):
 
         #output = os.path.abspath("robotMotion.csv")
         output = os.getcwd()
-        output = "/Users/hima/OneDrive/_CMU/Research/robotMotion.csv"
+        output = "/Users/hima/OneDrive/_CMU/Research/RobotMotion/robotMotion.csv"
 
         print "output path", output
 
@@ -140,6 +142,7 @@ class MyClass(GeneratedClass):
 
     def onInput_onStop(self):
         self.onUnload() #it is recommended to reuse the clean-up as the box is stopped
+        print "STOPPED"
         self.onStopped() #activate the output of the box]]>
 </content>
                             </script>

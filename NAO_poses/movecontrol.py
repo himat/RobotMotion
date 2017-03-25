@@ -1,5 +1,7 @@
 import almath
 import time
+import random
+import numpy as np
 
 isAbsolute = True
 init_speed = 0.4 # Fraction of max speed
@@ -82,6 +84,13 @@ JOINT_LIMITS = {
 
 }
 
+JOINTS_HEAD = ["HeadYaw", "HeadPitch"]
+JOINTS_ARMS_L = ["LShoulderPitch","LShoulderRoll","LElbowYaw","LElbowRoll","LWristYaw","LHand"]
+JOINTS_ARMS_R = ["RShoulderPitch","RShoulderRoll","RElbowYaw","RElbowRoll","RWristYaw","RHand"]
+JOINTS_HIPS = ["LHipYawPitch","RHipYawPitch"]
+JOINTS_LEGS_L = ["LHipRoll","LHipPitch","LKneePitch","LAnklePitch","LAnkleRoll"]
+JOINTS_LEGS_R = ["RHipRoll","RHipPitch","RKneePitch","RAnklePitch","RAnkleRoll"]
+
 
 
 def print_test():
@@ -89,6 +98,7 @@ def print_test():
     print "printing"
 
 def headSide(robot, side="left"):
+    print "Action: headSide"
 
     names = ["HeadYaw", "HeadPitch"]
     robot.motionProxy.setStiffnesses("Head", 1.0)  
@@ -104,6 +114,8 @@ def headSide(robot, side="left"):
     else:
         raise ValueError("An invalid side given - should be left or right")
 
+    label = "looking " + side
+
     # Initialize head so it's already looking to the side
     init_angles = [side_yaw, 0.0]
     robot.motionProxy.setAngles(names, init_angles, init_speed)
@@ -118,10 +130,12 @@ def headSide(robot, side="left"):
 
     robot.motionProxy.post.angleInterpolation(names, angles, times, isAbsolute)
 
-    data = recordData(robot, "looking " + side)
+    data = recordData(robot, label)
     return data
 
 def headDown(robot):
+    print "Action: headDown"
+
     robot.motionProxy.setStiffnesses("Head", 1.0)
 
     label = "head down"
@@ -148,11 +162,12 @@ def headDown(robot):
     robot.motionProxy.post.angleInterpolation(names, angles, times, isAbsolute)
     print "started interpolate"
 
-    data = recordData(robot, "Head Down")
+    data = recordData(robot, label)
 
     return data 
 
 def armOut(robot, side="left"):
+    print "Action: armOut"
 
     if side == "left":
         name = "LShoulderRoll"
@@ -161,6 +176,7 @@ def armOut(robot, side="left"):
     else:
         raise ValueError("An invalid side given - should be left or right")
 
+    label = side + " arm out"
 
     resetAllAngles(robot)
 
@@ -180,7 +196,7 @@ def armOut(robot, side="left"):
     robot.motionProxy.post.angleInterpolation(name, angles, times, isAbsolute)
 
 
-    data = recordData(robot, side + " arm out")
+    data = recordData(robot, label)
 
 
     robot.motionProxy.setStiffnesses(name, 0.0)
@@ -189,60 +205,94 @@ def armOut(robot, side="left"):
 
 def armUp(robot, side="left"):
 
+    print "Action: armUp"
+
     if side == "left":
-        names = ["LShoulderPitch"]
+        name = "LShoulderPitch"
     elif side == "right":
-        names = ["RShoulderPitch"]
+        name = "RShoulderPitch"
     # elif side == "both":
     #     names = ["LShoulderPitch", "RShoulderPitch"]
     else:
         raise ValueError("An invalid side given - should be left or right")
 
+    label = side + " arm up"
+    data = []
+
 
     resetAllAngles(robot)
 
+    print "here"
+    print np.random.rand(1,1)
+
+    robot.motionProxy.setStiffnesses(name, 1.0)
 
 
-    robot.motionProxy.setStiffnesses(names, 1.0)
+    init_angles = [(JOINT_LIMITS[name]["min"])*0.2]
 
 
-    init_angles = [(JOINT_LIMITS["LShoulderPitch"]["min"])*0.2]
-
-
-    robot.motionProxy.setAngles(names, init_angles, init_speed)
+    robot.motionProxy.setAngles(name, init_angles, init_speed)
     time.sleep(2)
 
-    angles = [JOINT_LIMITS["LShoulderPitch"]["min"] * 0.8]
+    angles = [JOINT_LIMITS[name]["min"] * 0.8]
     times = [4.0]
 
-    robot.motionProxy.post.angleInterpolation(names, angles, times, isAbsolute)
+    robot.motionProxy.post.angleInterpolation(name, angles, times, isAbsolute)
 
+    data = recordData(robot, label)
 
-    data = recordData(robot, side + " arm up")
+    # exclude_list = ["LShoulderPitch", "RShoulderPitch", "LElbowRoll", "RElbowRoll", "LShoulderRoll", "RShoulderRoll"]
+    
 
+    # start = init_angles[0]
+    # end = JOINT_LIMITS[name]["min"] * 0.8
+    # step = 0.1
+    # if end < start:
+    #     step *= -1
+    # x = np.arange(start, end, step)
 
-    robot.motionProxy.setStiffnesses(names, 0.0)
+    # for angle in np.arange(start, end, step):
+    #     print "ANGLE***********"
+
+    #     robot.motionProxy.setAngles(name, angle, init_speed)
+
+    #     time.sleep(0.3)
+
+    #     data += addNoisyMovementsAndRecord(robot, label, exclude_list=exclude_list, limit_leg_pitch=True)
+
+    robot.motionProxy.setStiffnesses(name, 0.0)
 
     return data
 
 def handClose(robot, side="left"):
+    print "Action: handClose"
+
     if side == "left":
         names = ["LHand"]
     elif side == "right":
         names = ["RHand"]
     else:
         raise ValueError("An invalid side given - should be left or right")
+
+    label = side + " hand closed"
 
     values = [JOINT_LIMITS[names[0]]["min"]]
 
     robot.motionProxy.setAngles(names, values, init_speed)
     time.sleep(1)
 
-    data = recordData(robot, side + " hand closed", duration=2)
+    data = recordData(robot, label, duration=2)
+
+    # exclude_list = names
+    # data = addNoisyMovementsAndRecord(robot, label, exclude_list=exclude_list)
+
+    robot.motionProxy.setStiffnesses(names, 0.0)
 
     return data 
 
 def handOpen(robot, side="left"):
+    print "Action: handOpen"
+
     if side == "left":
         names = ["LHand"]
     elif side == "right":
@@ -250,17 +300,24 @@ def handOpen(robot, side="left"):
     else:
         raise ValueError("An invalid side given - should be left or right")
 
+    label = side + " hand open"
+
     values = [JOINT_LIMITS[names[0]]["max"]]
 
     robot.motionProxy.setAngles(names, values, init_speed)
     time.sleep(1)
 
+    data = recordData(robot, label, duration=2)
 
-    data = recordData(robot, side + " hand open", duration=2)
+    # exclude_list = names
+    # data = addNoisyMovementsAndRecord(robot, label, exclude_list=exclude_list)
 
     return data 
 
 def legForward(robot, side="left"):
+    print "Action: legForward"
+    label = side + " leg forward"
+
     rec_duration = 50
 
     if side == "left":
@@ -284,7 +341,7 @@ def legForward(robot, side="left"):
 
     robot.motionProxy.post.angleInterpolation(names, angles, times, isAbsolute)
 
-    data = recordData(robot, side + " leg forward", duration=rec_duration)
+    data = recordData(robot, label, duration=rec_duration)
 
     # Putting the left leg forward by itself causes the torso to lean forward
     # So now we put the torso back upr ight while recording more data
@@ -303,6 +360,9 @@ def legForward(robot, side="left"):
     return data
 
 def leanSide(robot, side):
+    print "Action: leanSide"
+    label = "leaning " + side
+
     # Would be helpful to record data from an accelerometer or compass sensor on the robot to detect lean
 
     # Both of these sensors can cause the robot to lean so we generate data using all of them
@@ -332,7 +392,7 @@ def leanSide(robot, side):
 
         robot.motionProxy.post.angleInterpolation(n, a, t, isAbsolute)
 
-        data += recordData(robot, "leaning " + side)
+        data += recordData(robot, label)
 
 
     return data
@@ -372,9 +432,68 @@ def resetAllAngles(robot):
 
     time.sleep(2) # Since setAngles is non-blocking, give the robot time to reset 
 
-def addNoisyMovements(robot, exclude=[]):
+# Performs random movements of all possible joints excluding the ones specified in exclude_list
+# Also calls the recordData function automatically with the given label
+# Returns the recorded data 
+def addNoisyMovementsAndRecord(robot, label, exclude_list=[], limit_leg_pitch=False):
 
-    for joint_name, values in JOINT_LIMITS.iteritems():
+    data = []
+
+    leg_pitch_joints = ["LHipPitch", "RHipPitch", "LKneePitch", "RKneePitch", "LAnklePitch", "RAnklePitch", "LHipYawPitch", "RHipYawPitch"]
+
+    # Convenience short strings which if seen, make all the related joints added to the exclude list
+    if "head" in exclude_list:
+        exclude_list += JOINTS_HEAD
+    if "arms" in exclude_list:
+        exclude_list += JOINTS_ARMS_L + JOINTS_ARMS_R
+    if "legs" in exclude_list:
+        exclude_list += JOINTS_LEGS_L + JOINTS_LEGS_R
+    if "hips" in exclude_list:
+        exclude_list += JOINTS_HIPS
+
+    print "Adding random noise"
+    
+    # Go through each joint and make it move randomly 
+    for joint_name, joint_values in JOINT_LIMITS.iteritems():
+
+        reset_to_init = False
+
+        # Don't move excluded joints 
+        if joint_name in exclude_list:
+            continue
+
+        print "-",joint_name
+
+        # random float in [0.0, 1.0)
+        r = random.random()
+
+        angles = [joint_values["max"] * r, joint_values["min"]*r]
+        times = [2.0, 4.0]
+
+        if limit_leg_pitch and joint_name in leg_pitch_joints:
+            print "limiting leg pitch"
+
+            max_pitch = joint_values["max"] * 0.3
+            min_pitch = joint_values["min"] * 0.3
+
+            angles = [min(angles[0], max_pitch), max(angles[1], min_pitch)]
+
+            reset_to_init = True
+
+
+        robot.motionProxy.post.angleInterpolation(joint_name, angles, times, isAbsolute)
+
+        data += recordData(robot, label)
+
+
+        # Sets this joint back to its init position
+        if reset_to_init:
+            robot.motionProxy.setAngles(joint_name, joint_values["init"], init_speed)
+            time.sleep(0.3)
+
+    return data
+
+
 
 
 
