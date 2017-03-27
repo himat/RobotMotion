@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
 
-input_csv = "basic_left.csv"
-output_train = "basic_left_train.csv"
-output_test = "basic_left_test.csv"
+input_csv = "robotMotion.csv"
+output_train = "train.csv"
+output_test = "test.csv"
 
 data_in = pd.read_csv(input_csv)
 

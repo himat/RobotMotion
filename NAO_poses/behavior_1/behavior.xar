@@ -91,22 +91,23 @@ class MyClass(GeneratedClass):
         data = []
         movecontrol.print_test()
 
-#        data += movecontrol.headSide(self, "left")
-#        data += movecontrol.headDown(self)
+        data += movecontrol.headSide(self, "left")
+        data += movecontrol.headDown(self)
 
-#        data += movecontrol.armUp(self, "left")
-#        data += movecontrol.armOut(self, "left")
+        data += movecontrol.armUp(self, "left")
+        data += movecontrol.armOut(self, "left")
 
-#        data += movecontrol.handClose(self, "left")
-#        data += movecontrol.handOpen(self, "left")
+        data += movecontrol.handClose(self, "left")
+        data += movecontrol.handOpen(self, "left")
 
-#        data += movecontrol.legForward(self, "left")
-#        data += movecontrol.leanSide(self, "left")
+        data += movecontrol.legForward(self, "left")
+        data += movecontrol.leanSide(self, "left")
 
         #data += movecontrol.leanSide(self, "right")
 
         #movecontrol.LShoulderPitch(self)
         #self.tts.say("parallel speech")
+
 
         line = []
         for key in self.ALMEMORY_KEY_NAMES:
@@ -116,7 +117,7 @@ class MyClass(GeneratedClass):
 
         #output = os.path.abspath("robotMotion.csv")
         output = os.getcwd()
-        output = "/Users/hima/OneDrive/_CMU/Research/RobotMotion/robotMotion.csv"
+        output = "/Users/hima/OneDrive/_CMU/Research/RobotMotion/NAO_poses/robotMotion.csv"
 
         print "output path", output
 
@@ -125,11 +126,11 @@ class MyClass(GeneratedClass):
             prefix_len = len("Motion/Position/Sensor/")
             sensor_names = [s[prefix_len:] for s in movecontrol.ALL_SENSOR_KEY_NAMES]
             sensor_names += ["Label"]
-            fp.write(", ".join(sensor_names))
+            fp.write(",".join(sensor_names))
             fp.write("\n")
 
             for line in data:
-                fp.write(", ".join(str(x) for x in line))
+                fp.write(",".join(str(x) for x in line))
                 fp.write("\n")
 
         print "results written to", output

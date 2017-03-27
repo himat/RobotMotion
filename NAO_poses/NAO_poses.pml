@@ -8,6 +8,8 @@
     <Resources>
         <File name="movecontrol" src="movecontrol.py" />
         <File name="" src=".DS_Store" />
+        <File name="robotMotion_up_100" src="robotMotion_up_100.csv" />
+        <File name="robotMotion" src="robotMotion.csv" />
     </Resources>
     <Topics />
     <IgnoredPaths />

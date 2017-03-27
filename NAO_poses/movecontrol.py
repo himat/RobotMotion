@@ -130,7 +130,7 @@ def headSide(robot, side="left"):
 
     robot.motionProxy.post.angleInterpolation(names, angles, times, isAbsolute)
 
-    data = recordData(robot, label)
+    data = recordData(robot, label, duration=getLastTime(times))
     return data
 
 def headDown(robot):
@@ -162,7 +162,9 @@ def headDown(robot):
     robot.motionProxy.post.angleInterpolation(names, angles, times, isAbsolute)
     print "started interpolate"
 
-    data = recordData(robot, label)
+    t = getLastTime(times)
+    print "found time: ", t
+    data = recordData(robot, label, duration=getLastTime(times))
 
     return data 
 
@@ -196,7 +198,7 @@ def armOut(robot, side="left"):
     robot.motionProxy.post.angleInterpolation(name, angles, times, isAbsolute)
 
 
-    data = recordData(robot, label)
+    data = recordData(robot, label, duration=getLastTime(times))
 
 
     robot.motionProxy.setStiffnesses(name, 0.0)
@@ -239,7 +241,7 @@ def armUp(robot, side="left"):
 
     robot.motionProxy.post.angleInterpolation(name, angles, times, isAbsolute)
 
-    data = recordData(robot, label)
+    data = recordData(robot, label, duration=getLastTime(times))
 
     # exclude_list = ["LShoulderPitch", "RShoulderPitch", "LElbowRoll", "RElbowRoll", "LShoulderRoll", "RShoulderRoll"]
     
@@ -266,6 +268,7 @@ def armUp(robot, side="left"):
 
 def handClose(robot, side="left"):
     print "Action: handClose"
+    hands_list = ["LHand", "RHand"]
 
     if side == "left":
         names = ["LHand"]
@@ -283,8 +286,8 @@ def handClose(robot, side="left"):
 
     data = recordData(robot, label, duration=2)
 
-    # exclude_list = names
-    # data = addNoisyMovementsAndRecord(robot, label, exclude_list=exclude_list)
+    exclude_list = hands_list
+    data = addNoisyMovementsAndRecord(robot, label, exclude_list=exclude_list)
 
     robot.motionProxy.setStiffnesses(names, 0.0)
 
@@ -292,6 +295,7 @@ def handClose(robot, side="left"):
 
 def handOpen(robot, side="left"):
     print "Action: handOpen"
+    hands_list = ["LHand", "RHand"]
 
     if side == "left":
         names = ["LHand"]
@@ -309,8 +313,8 @@ def handOpen(robot, side="left"):
 
     data = recordData(robot, label, duration=2)
 
-    # exclude_list = names
-    # data = addNoisyMovementsAndRecord(robot, label, exclude_list=exclude_list)
+    exclude_list = hands_list
+    data = addNoisyMovementsAndRecord(robot, label, exclude_list=exclude_list)
 
     return data 
 
@@ -318,15 +322,13 @@ def legForward(robot, side="left"):
     print "Action: legForward"
     label = side + " leg forward"
 
-    rec_duration = 50
-
     if side == "left":
         names = ["LHipPitch"]
     elif side == "right":
         names = ["RHipPitch"]
-        rec_duration = 100
     else:
         raise ValueError("An invalid side given - should be left or right")
+
 
     robot.motionProxy.setStiffnesses(names, 1.0)
 
@@ -341,18 +343,19 @@ def legForward(robot, side="left"):
 
     robot.motionProxy.post.angleInterpolation(names, angles, times, isAbsolute)
 
-    data = recordData(robot, label, duration=rec_duration)
+    data = recordData(robot, label, duration=getLastTime(times))
 
     # Putting the left leg forward by itself causes the torso to lean forward
-    # So now we put the torso back upr ight while recording more data
-    if side != "right":
+    # So now we put the torso back up right while recording more data
+    # Only happens on the left side 
+    if side == "left":
         names = ["LKneePitch"]
         angles = [JOINT_LIMITS["LKneePitch"]["max"] * 0.28]
         times = [2.0]
 
         robot.motionProxy.post.angleInterpolation(names, angles, times, isAbsolute)
 
-        data += recordData(robot, side + "leg forward", duration=rec_duration)
+        data += recordData(robot, label, duration=getLastTime(times))
     
 
     robot.motionProxy.setStiffnesses(names, 0.0)
@@ -392,7 +395,7 @@ def leanSide(robot, side):
 
         robot.motionProxy.post.angleInterpolation(n, a, t, isAbsolute)
 
-        data += recordData(robot, label)
+        data += recordData(robot, label, getLastTime([t]))
 
 
     return data
@@ -400,13 +403,22 @@ def leanSide(robot, side):
 # Records data (all sensor values) while the robot is executing an action
 # Returns a list of lists of the collected data 
 # Label is the label of what this output is (added as last column)
-def recordData(robot, label, duration=100):
+# Duration must be in seconds
+def recordData(robot, label, duration):
     print "---recording started"
 
     # print robot.memoryProxy.getDataList("HeadYaw")
 
     data = []
-    for i in range(1,duration):
+
+    # Extra time to record the data since there is still some movement of the joints after the actual animation has ended
+    EXTRA_TIME = 0.2 # seconds
+
+    t_end = time.time() + duration + EXTRA_TIME
+
+    while time.time() < t_end:
+    # for i in range(1, duration):
+
         line = []
         for key in ALL_SENSOR_KEY_NAMES:
             value = robot.memoryProxy.getData(key)
@@ -430,8 +442,17 @@ def resetAllAngles(robot):
 
     print "Set all angles init"
 
-    time.sleep(2) # Since setAngles is non-blocking, give the robot time to reset 
+    time.sleep(2.2) # Since setAngles is non-blocking, give the robot time to reset 
 
+# Returns the latest time in a list of times for an angle movement
+# handles the case for both a list of lists and a single list 
+def getLastTime(times_list):
+    if isinstance(times_list[0], list):
+        print "is a list"
+        return reduce(lambda ac, l: max(ac, l[-1]), times_list, -1)
+    else:
+        print "not an inner list"
+        return times_list[-1]
 # Performs random movements of all possible joints excluding the ones specified in exclude_list
 # Also calls the recordData function automatically with the given label
 # Returns the recorded data 
@@ -483,7 +504,7 @@ def addNoisyMovementsAndRecord(robot, label, exclude_list=[], limit_leg_pitch=Fa
 
         robot.motionProxy.post.angleInterpolation(joint_name, angles, times, isAbsolute)
 
-        data += recordData(robot, label)
+        data += recordData(robot, label, getLastTime(times))
 
 
         # Sets this joint back to its init position
