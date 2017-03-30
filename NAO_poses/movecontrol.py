@@ -57,7 +57,7 @@ JOINT_LIMITS = {
     "LWristYaw": {"min": -1.8238, "max": 1.8238, "init": 0.0999999940395},
     "LHand": {"min": 0.0, "max": 1.0, "init": 0.3}, # 0: closed, 1: open
     "RShoulderPitch": {"min": -2.0857, "max": 2.0857, "init": 1.47235631943},
-    "RShoulderRoll": {"min": -1.3265, "max": 0.3142, "init": -0.185418859124},
+    "RShoulderRoll": {"min": -1.3265, "max": 0.3142, "init": -0.185418859124}, 
     "RElbowYaw": {"min": -2.0857, "max": 2.0857, "init": 1.19370257854},
     "RElbowRoll": {"min": 0.0349, "max": 1.5446, "init": 0.410387575626},
     "RWristYaw": {"min": -1.8238, "max": 1.8238, "init": 0.0999999940395},
@@ -170,11 +170,14 @@ def headDown(robot):
 
 def armOut(robot, side="left"):
     print "Action: armOut"
+    angle_dir = ""
 
     if side == "left":
         name = "LShoulderRoll"
+        angle_dir = "max"
     elif side == "right":
         name = "RShoulderRoll"
+        angle_dir = "min"
     else:
         raise ValueError("An invalid side given - should be left or right")
 
@@ -185,14 +188,14 @@ def armOut(robot, side="left"):
     robot.motionProxy.setStiffnesses(name, 1.0)
 
 
-    init_angles = [(JOINT_LIMITS[name]["max"])*0.8]
+    init_angles = [(JOINT_LIMITS[name][angle_dir])*0.8]
 
 
     robot.motionProxy.setAngles(name, init_angles, init_speed)
 
     time.sleep(2)
 
-    angles = [JOINT_LIMITS[name]["max"]]
+    angles = [JOINT_LIMITS[name][angle_dir]]
     times = [4.0]
 
     robot.motionProxy.post.angleInterpolation(name, angles, times, isAbsolute)
@@ -334,10 +337,12 @@ def legForward(robot, side="left"):
 
     resetAllAngles(robot)
 
-    # Just using the init angles from the reset position
+    # Leg is put an initial amount forward
+    init_angles = [(JOINT_LIMITS[names[0]]["min"])*0.2]
+    robot.motionProxy.setAngles(names, init_angles, init_speed)
+    time.sleep(2)
 
-
-    # First, the left leg is put forward
+    # Leg is put more forward
     angles = [JOINT_LIMITS[names[0]]["min"] * 0.6]
     times = [2.0]
 
@@ -350,7 +355,7 @@ def legForward(robot, side="left"):
     # Only happens on the left side 
     if side == "left":
         names = ["LKneePitch"]
-        angles = [JOINT_LIMITS["LKneePitch"]["max"] * 0.28]
+        angles = [JOINT_LIMITS[names[0]]["max"] * 0.28]
         times = [2.0]
 
         robot.motionProxy.post.angleInterpolation(names, angles, times, isAbsolute)

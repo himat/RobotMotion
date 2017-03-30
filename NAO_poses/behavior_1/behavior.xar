@@ -91,6 +91,7 @@ class MyClass(GeneratedClass):
         data = []
         movecontrol.print_test()
 
+        # Left side
         data += movecontrol.headSide(self, "left")
         data += movecontrol.headDown(self)
 
@@ -103,9 +104,21 @@ class MyClass(GeneratedClass):
         data += movecontrol.legForward(self, "left")
         data += movecontrol.leanSide(self, "left")
 
-        #data += movecontrol.leanSide(self, "right")
+        # Right side
+        data += movecontrol.headSide(self, "right")
 
-        #movecontrol.LShoulderPitch(self)
+        data += movecontrol.armUp(self, "right")
+        data += movecontrol.armOut(self, "right")
+
+        data += movecontrol.handClose(self, "right")
+        data += movecontrol.handOpen(self, "right")
+
+        data += movecontrol.legForward(self, "right")
+        data += movecontrol.leanSide(self, "right")
+
+
+
+
         #self.tts.say("parallel speech")
 
 
@@ -117,6 +130,7 @@ class MyClass(GeneratedClass):
 
         #output = os.path.abspath("robotMotion.csv")
         output = os.getcwd()
+        print "output? ", output
         output = "/Users/hima/OneDrive/_CMU/Research/RobotMotion/NAO_poses/robotMotion.csv"
 
         print "output path", output
